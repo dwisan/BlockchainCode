@@ -35,8 +35,7 @@ class Blockchain:
                 'course': self.course,
                 'grade': self.grade
                 }
-        
-
+   
         block_header = {
                'block': len(self.chain),
                'timestamp': time(),
