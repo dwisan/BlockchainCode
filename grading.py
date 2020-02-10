@@ -36,7 +36,6 @@ class Blockchain:
                 'grade': self.grade
                 }
         
-
         block_header = {
                'block': len(self.chain),
                'timestamp': time(),
@@ -46,7 +45,6 @@ class Blockchain:
         
         #block = {'header': block_header,'data': binascii.hexlify(self.encrypt(str(block_data).encode())).decode()}
         block = {'header': block_header,'data': block_data}
-        
         self.chain.append(block)     
         
     def set_block(self):
@@ -81,6 +79,5 @@ grade_list = [['748-341','A'],
 for grade in grade_list:
     blockchain.set_grade(grade[0],grade[1])
     blockchain.set_block()
-
 
 json.dump(blockchain.chain, open('blockchain.json', 'w'))
