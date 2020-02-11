@@ -32,8 +32,26 @@ class Blockchain:
             for block in data:
                 self.chain.append(block)
     
-    def verify():
-        pass
+    def verify(self,uid):
+        last_block = self.chain[-1]
+        current_index = len(self.chain) - 2
+        
+        while current_index > 0:
+            block = self.chain[current_index]
+
+            if str(last_block['header']['prev_hash']) == str(self._hash(block)):
+                last_block = block
+                current_index -= 1
+                flg = True
+                continue
+            else:
+                flg = False
+                break
+            
+        if flg == True: 
+            return "Chain valid" 
+        else:
+            return "Chain not valid"
     
     def previous_hash(self):
         if len(self.chain) == 0:
@@ -90,37 +108,47 @@ app.config['JSON_SORT_KEYS'] = False
 
 CORS(app)
 
-#json.dump(blockchain.chain, open('blockchain.json', 'w'))
-@app.route('/chain/<uid>', methods=['GET'])
+"""
+# Generate chain 
+blockchain = Blockchain(uid)
+blockchain.generic_block()
+
+grade_list = [['748-341','A'],
+              ['748-443','B'],
+              ['748-445','B'],
+              ['748-446','A'],
+              ['748-323','C']]
+
+
+for grade in grade_list:
+    blockchain.set_grade(grade[0],grade[1])
+    blockchain.set_block()
+
+json.dump(blockchain.chain, open('blockchain.json', 'w'))
+"""
+
+#Load chain for json
+uid = "54123456"
+blockchain = Blockchain(uid)
+fileuser = str(uid +'.json')
+blockchain.load_data(fileuser)
+
+@app.route('/<uid>', methods=['GET'])
 def full_chain(uid):
     
-    """
-    # Generate chain 
-    blockchain = Blockchain(uid)
-    blockchain.generic_block()
-    
-    grade_list = [['748-341','A'],
-                  ['748-443','B'],
-                  ['748-445','B'],
-                  ['748-446','A'],
-                  ['748-323','C']]
-    
-    
-    for grade in grade_list:
-        blockchain.set_grade(grade[0],grade[1])
-        blockchain.set_block()
-    """
-
-    #Load chain for json
-    blockchain = Blockchain(uid)
-    fileuser = str(uid +'.json')
-    blockchain.load_data(fileuser)
-
     response = {
         'chain': blockchain.chain,
     }
     return jsonify(response), 200
 
+@app.route('/<uid>/verify', methods=['GET'])
+def verify(uid):
+    
+    response = {
+            'Result': blockchain.verify(uid),
+            }
+    return jsonify(response), 200
+
 if __name__ == '__main__':
 
-    app.run(host='127.0.0.1', port=5000)
+    app.run(host='0.0.0.0', port=5000)
