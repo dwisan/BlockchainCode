@@ -5,11 +5,12 @@ import json
 from flask import Flask, jsonify
 from flask_cors import CORS
 
+import os.path
+from os import path
+
 class Blockchain:
     
-    def __init__(self, studentid):
-        self.stdid = studentid
-        self.set_grade()
+    def __init__(self):
         self.chain = []
     
     def set_grade(self, course=None, grade=None):
@@ -24,13 +25,21 @@ class Blockchain:
     def _hash(data):
         return sha256(str(data).encode()).hexdigest()
 
-    def load_data(self,file):
+    def load_data(self,user):
         
-        with open(file,'r') as json_file:
-            data = json.load(json_file)
-    
-            for block in data:
-                self.chain.append(block)
+        self.chain = []
+        
+        fileuser = str(user +".json")
+        
+        if path.exists(fileuser):
+            with open(fileuser,'r') as json_file:
+                data = json.load(json_file)
+        
+                for block in data:
+                    self.chain.append(block)
+            return True
+        else:
+            return False
     
     def verify(self,uid):
         last_block = self.chain[-1]
@@ -128,25 +137,67 @@ json.dump(blockchain.chain, open('blockchain.json', 'w'))
 """
 
 #Load chain for json
-uid = "54123456"
-blockchain = Blockchain(uid)
-fileuser = str(uid +'.json')
-blockchain.load_data(fileuser)
+blockchain = Blockchain()
 
 @app.route('/<uid>', methods=['GET'])
 def full_chain(uid):
+
+    if blockchain.load_data(uid):
+        
+        response = {
+            'chain': blockchain.chain,
+        }
+    else:
+        response = {
+            'warning': "not valid input data" ,
+        }
+        
+    return jsonify(response), 200
+
+@app.route('/<uid>/<cid>', methods=['GET'])
+def get_grade(uid,cid):
     
-    response = {
-        'chain': blockchain.chain,
-    }
+    if blockchain.load_data(uid):
+    
+        current_index = len(blockchain.chain) - 1
+            
+        while current_index > 0:
+            block = blockchain.chain[current_index]
+            pblock = blockchain.chain[current_index - 1]
+            
+                
+            if str(block['data']['course']) == str(cid):
+                if str(block['header']['prev_hash']) == str(blockchain._hash(pblock)):
+                    break
+                else:
+                    block = "Not valide Block"
+                    break
+                
+            current_index -= 1
+        
+        response = {
+            'grade': block['data']['grade'],
+        }
+    else:
+        response = {
+           'warning': "not valid input data" ,
+        }        
+        
     return jsonify(response), 200
 
 @app.route('/<uid>/verify', methods=['GET'])
 def verify(uid):
     
-    response = {
-            'Result': blockchain.verify(uid),
-            }
+    if blockchain.load_data(uid):
+    
+        response = {
+                'Result': blockchain.verify(uid),
+                }
+    else:
+        response = {
+           'warning': "not valid input data" ,
+        }  
+        
     return jsonify(response), 200
 
 if __name__ == '__main__':
